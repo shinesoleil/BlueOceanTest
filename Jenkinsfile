@@ -5,12 +5,15 @@ pipeline {
       steps {
         echo 'Building......'
         sh './gradlew clean build'
+        findbugs(pattern: 'build/reports/findbugs/*.xml')
       }
       post {
         always {
           junit 'build/test-results/TEST-*.xml'
-          findbugs('build/reports/findbugs/*.xml')
+          findbugs 'build/reports/findbugs/*.xml'
+          
         }
+        
       }
     }
     stage('Test') {
@@ -18,11 +21,11 @@ pipeline {
         parallel(
           "Test1": {
             echo 'Testing1......'
-
+            
           },
           "Test2": {
             echo 'Testing2......'
-
+            
           }
         )
       }
