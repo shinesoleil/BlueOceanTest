@@ -1,0 +1,132 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.flywaydb:flyway-gradle-plugin:3.0"
+        classpath 'mysql:mysql-connector-java:5.1.34'
+    }
+}
+
+apply plugin: 'application'
+apply plugin: 'java'
+apply plugin: 'idea'
+
+def currentEnv = System.getenv()
+
+mainClassName = "com.thoughtworks.ketsu.MainServer"
+
+
+repositories {
+    jcenter()
+}
+
+sourceSets {
+    itest
+    test {
+        resources {
+            srcDir 'src/itest/resources'
+        }
+    }
+}
+
+ext {
+    main='com.thoughtworks.ketsu.MainServer'
+    joda_time = '2.6'
+    servlet_api = '3.0.1'
+    jaxrs = '2.0.1'
+    hk2_api = '2.4.0-b09'
+    junit = '4.12'
+    guice = '3.0'
+    jersey = '2.17'
+    mockito = '1.9.5'
+    hamcrest = '1.3'
+    slf4j = '1.7.13'
+    guava = '18.0'
+    mybatis = '3.3.0'
+    mybatis_guice = '3.7'
+    guice_bridge = '2.4.0-b09'
+    jackson_joda = '2.4.0'
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+dependencies {
+    itestCompile group: 'junit', name: 'junit', version: '4.12'
+
+    testCompile "junit:junit:$junit"
+    testCompile "org.hamcrest:hamcrest-all:$hamcrest"
+    testCompile "org.mockito:mockito-all:$mockito"
+
+    testCompile "org.glassfish.jersey.test-framework:jersey-test-framework-core:$jersey"
+    testCompile "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jersey"
+}
+
+task standaloneJar(type: Jar, dependsOn: jar) {
+    baseName = "app"
+    classifier = "standalone"
+    version = ""
+
+    from files(sourceSets.main.output.classesDir)
+    from files(sourceSets.main.output.resourcesDir)
+
+    from configurations.runtime.asFileTree.files.collect { zipTree(it) }
+
+    exclude("META-INF/*.SF")
+    exclude("META-INF/*.DSA")
+    exclude("META-INF/*.RSA")
+    exclude("META-INF/*.RSA")
+    exclude("META-INF/*.RSA")
+    manifest {
+        attributes 'Main-Class': "$main"
+    }
+}
+
+task itestJar(type: Jar, dependsOn: jar) {
+    baseName = "verify"
+    classifier = "standalone"
+    version = ""
+
+    from files(sourceSets.itest.output.classesDir)
+    from files(sourceSets.itest.output.resourcesDir)
+
+    from configurations.itestCompile.asFileTree.files.collect { zipTree(it) }
+
+    exclude("META-INF/*.SF")
+    exclude("META-INF/*.DSA")
+    exclude("META-INF/*.RSA")
+    exclude("META-INF/*.RSA")
+    exclude("META-INF/*.RSA")
+    manifest {
+        attributes 'Main-Class': 'specs.Main'
+    }
+}
+
+task itest(type: Exec) {
+    def _env = [:]
+    _env << System.getenv();
+    environment = _env
+    commandLine 'java', '-jar', "build/libs/verify-standalone.jar"
+}
+
+itest.dependsOn itestJar
+
+itestJar.dependsOn itestClasses
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.itest.output.classesDir
+    classpath = sourceSets.itest.runtimeClasspath
+}
+
+task initDataInDB(){
+    doFirst {
+        flyway {
+            locations = ['classpath:db/init']
+            initOnMigrate = true
+            table = 'schema_version_for_data'
+        }
+    }
+    doLast {
+        tasks.flywayMigrate.execute()
+    }
+}
