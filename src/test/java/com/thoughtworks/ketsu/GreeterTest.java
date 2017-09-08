@@ -10,7 +10,7 @@ public class GreeterTest {
     @Test
     public void test1() {
         Greeter greeter = new Greeter();
-        assertThat(greeter.greet("Andy"), is("Hello Andy"));
+        assertThat(greeter.greet("And"), is("Hello Andy"));
     }
 
     @Test
