@@ -12,6 +12,10 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'findbugs'
 
+findbugs {
+    ignoreFailures = true
+}
+
 def currentEnv = System.getenv()
 
 mainClassName = "com.thoughtworks.ketsu.MainServer"
@@ -52,14 +56,8 @@ ext {
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {
-    itestCompile group: 'junit', name: 'junit', version: '4.12'
-
     testCompile "junit:junit:$junit"
     testCompile "org.hamcrest:hamcrest-all:$hamcrest"
-    testCompile "org.mockito:mockito-all:$mockito"
-
-    testCompile "org.glassfish.jersey.test-framework:jersey-test-framework-core:$jersey"
-    testCompile "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jersey"
 }
 
 task standaloneJar(type: Jar, dependsOn: jar) {

@@ -5,5 +5,7 @@ public class Greeter {
         return "Hello " + name;
     }
 
-
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
 }
